@@ -158,8 +158,7 @@ func main() {
 		TraefikDisableNew:              cfg.TraefikDisableNew,
 	}
 
-	// Lookup all the selected sources by names and pass them the desired configuration.
-	sources, err := source.ByNames(ctx, &source.SingletonClientGenerator{
+	clientGenerator := &source.SingletonClientGenerator{
 		KubeConfig:   cfg.KubeConfig,
 		APIServerURL: cfg.APIServerURL,
 		// If update events are enabled, disable timeout.
@@ -169,7 +168,9 @@ func main() {
 			}
 			return cfg.RequestTimeout
 		}(),
-	}, cfg.Sources, sourceCfg)
+	}
+	// Lookup all the selected sources by names and pass them the desired configuration.
+	sources, err := source.ByNames(ctx, clientGenerator, cfg.Sources, sourceCfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -403,6 +404,16 @@ func main() {
 
 	var r registry.Registry
 	switch cfg.Registry {
+	case "crd":
+		k8sClient, err := clientGenerator.KubeClient()
+		log.Fatal(err)
+
+		client, err := registry.NewCRDClientForAPIVersionKind(k8sClient, cfg.KubeConfig, cfg.APIServerURL, cfg.CRDSourceAPIVersion, cfg.CRDSourceKind)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		r, err = registry.NewCRDRegistry(p, client, cfg.TXTOwnerID, cfg.TXTCacheInterval, cfg.Namespace)
 	case "dynamodb":
 		config := awsSDK.NewConfig()
 		if cfg.AWSDynamoDBRegion != "" {
