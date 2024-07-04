@@ -33,6 +33,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog/v2"
 
@@ -405,15 +406,21 @@ func main() {
 	var r registry.Registry
 	switch cfg.Registry {
 	case "crd":
-		k8sClient, err := clientGenerator.KubeClient()
-		log.Fatal(err)
+		var k8sClient kubernetes.Interface
+		k8sClient, err = clientGenerator.KubeClient()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		client, err := registry.NewCRDClientForAPIVersionKind(k8sClient, cfg.KubeConfig, cfg.APIServerURL, cfg.CRDSourceAPIVersion, cfg.CRDSourceKind)
+		client, err := registry.NewCRDClientForAPIVersionKind(k8sClient, cfg.KubeConfig, cfg.APIServerURL, cfg.CRDSourceAPIVersion)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		r, err = registry.NewCRDRegistry(p, client, cfg.TXTOwnerID, cfg.TXTCacheInterval, cfg.Namespace)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "dynamodb":
 		config := awsSDK.NewConfig()
 		if cfg.AWSDynamoDBRegion != "" {

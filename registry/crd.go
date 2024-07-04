@@ -25,6 +25,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"sigs.k8s.io/external-dns/crds"
 	"sigs.k8s.io/external-dns/endpoint"
 	"sigs.k8s.io/external-dns/plan"
 	"sigs.k8s.io/external-dns/provider"
@@ -39,13 +40,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const (
-	CRDRegistryOwnerLabel      string = "externaldns.k8s.io/owner"
-	CRDRegistryRecordNameLabel string = "externaldns.k8s.io/record-name"
-	CRDRegistryRecordTypeLabel string = "externaldns.k8s.io/record-type"
-	CRDRegistryIdentifierLabel string = "externaldns.k8s.io/identifier"
-)
-
 type CRDConfig struct {
 	KubeConfig   string
 	APIServerURL string
@@ -53,16 +47,33 @@ type CRDConfig struct {
 	Kind         string
 }
 
-type CRDClient struct {
-	scheme   *runtime.Scheme
-	codec    runtime.ParameterCodec
-	resource *metav1.APIResource
-	rest.Interface
+// The CRD interfaces are built as k8s' rest.Interface doesn't have proper support for testing
+// These interfaces exists so the runtime will use the rest.Interface but gives an
+// option for writing tests without building a complete k8s client.
+type CRDClient interface {
+	Get() CRDRequest
+	List() CRDRequest
+	Put() CRDRequest
+	Post() CRDRequest
+	Delete() CRDRequest
+}
+
+type CRDRequest interface {
+	Name(string) CRDRequest
+	Namespace(string) CRDRequest
+	Body(interface{}) CRDRequest
+	Params(runtime.Object) CRDRequest
+	Do(context.Context) CRDResult
+}
+
+type CRDResult interface {
+	Error() error
+	Into(runtime.Object) error
 }
 
 // CRDRegistry implements registry interface with ownership implemented via associated custom resource records (DSNEntry)
 type CRDRegistry struct {
-	client    *CRDClient
+	client    CRDClient
 	namespace string
 	provider  provider.Provider
 	ownerID   string // refers to the owner id of the current instance
@@ -74,7 +85,7 @@ type CRDRegistry struct {
 }
 
 // NewCRDClientForAPIVersionKind return rest client for the given apiVersion and kind of the CRD
-func NewCRDClientForAPIVersionKind(client kubernetes.Interface, kubeConfig, apiServerURL, apiVersion, kind string) (*CRDClient, error) {
+func NewCRDClientForAPIVersionKind(client kubernetes.Interface, kubeConfig, apiServerURL, apiVersion string) (CRDClient, error) {
 	if kubeConfig == "" {
 		if _, err := os.Stat(clientcmd.RecommendedHomeFile); err == nil {
 			kubeConfig = clientcmd.RecommendedHomeFile
@@ -90,26 +101,11 @@ func NewCRDClientForAPIVersionKind(client kubernetes.Interface, kubeConfig, apiS
 	if err != nil {
 		return nil, err
 	}
-	apiResourceList, err := client.Discovery().ServerResourcesForGroupVersion(groupVersion.String())
-	if err != nil {
-		return nil, fmt.Errorf("error listing resources in GroupVersion %q: %w", groupVersion.String(), err)
-	}
-
-	var crdAPIResource *metav1.APIResource
-	for _, apiResource := range apiResourceList.APIResources {
-		if apiResource.Kind == kind {
-			crdAPIResource = &apiResource
-			break
-		}
-	}
-	if crdAPIResource == nil {
-		return nil, fmt.Errorf("unable to find Resource Kind %q in GroupVersion %q", kind, apiVersion)
-	}
 
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(groupVersion,
-		&DNSEntry{},
-		&DNSEntryList{},
+		&crds.DNSEntry{},
+		&crds.DNSEntryList{},
 	)
 	metav1.AddToGroupVersion(scheme, groupVersion)
 
@@ -122,13 +118,32 @@ func NewCRDClientForAPIVersionKind(client kubernetes.Interface, kubeConfig, apiS
 		return nil, err
 	}
 
-	return &CRDClient{scheme: scheme, resource: crdAPIResource, codec: runtime.NewParameterCodec(scheme), Interface: crdClient}, nil
+	apiResourceList, err := client.Discovery().ServerResourcesForGroupVersion(groupVersion.String())
+	if err != nil {
+		return nil, fmt.Errorf("error listing resources in GroupVersion %q: %w", groupVersion.String(), err)
+	}
+
+	var crdAPIResource *metav1.APIResource
+	for _, apiResource := range apiResourceList.APIResources {
+		if apiResource.Kind == "DNSEntry" {
+			crdAPIResource = &apiResource
+			break
+		}
+	}
+	if crdAPIResource == nil {
+		return nil, fmt.Errorf("unable to find Resource Kind %q in GroupVersion %q", "DNSEntry", apiVersion)
+	}
+	return &crdclient{scheme: scheme, resource: crdAPIResource, codec: runtime.NewParameterCodec(scheme), Interface: crdClient}, nil
 }
 
 // NewCRDRegistry returns new CRDRegistry object
-func NewCRDRegistry(provider provider.Provider, crdClient *CRDClient, ownerID string, cacheInterval time.Duration, namespace string) (*CRDRegistry, error) {
+func NewCRDRegistry(provider provider.Provider, crdClient CRDClient, ownerID string, cacheInterval time.Duration, namespace string) (*CRDRegistry, error) {
 	if ownerID == "" {
 		return nil, errors.New("owner id cannot be empty")
+	}
+
+	if namespace == "" {
+		return nil, errors.New("namespace cannot be empty, if you want to use `default` you need to specify it")
 	}
 
 	return &CRDRegistry{
@@ -173,6 +188,31 @@ func (im *CRDRegistry) Records(ctx context.Context) ([]*endpoint.Endpoint, error
 		endpoints = append(endpoints, record)
 	}
 
+	var entries crds.DNSEntryList
+	for more := true; more; more = entries.Continue != "" {
+		opts := metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s", crds.RegistryOwnerLabel, im.ownerID),
+		}
+
+		if entries.Continue != "" {
+			opts.Continue = entries.Continue
+		}
+
+		// Populate the labels for each record with the RegistryEntry matching.
+		err = im.client.Get().Namespace(im.namespace).Params(&opts).Do(ctx).Into(&entries)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, entry := range entries.Items {
+			for _, endpoint := range endpoints {
+				if entry.IsEndpoint(endpoint) {
+					endpoint.Labels = entry.EndpointLabels()
+				}
+			}
+		}
+	}
+
 	// Update the cache.
 	if im.cacheInterval > 0 {
 		im.recordsCache = endpoints
@@ -193,22 +233,22 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 	}
 
 	for _, r := range filteredChanges.Create {
-		entry := &DNSEntry{
+		entry := &crds.DNSEntry{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      fmt.Sprintf("%s-%s", r.DNSName, im.OwnerID()),
 				Namespace: im.namespace,
 				Labels: map[string]string{
-					CRDRegistryOwnerLabel:      im.OwnerID(),
-					CRDRegistryRecordNameLabel: r.DNSName,
-					CRDRegistryRecordTypeLabel: r.RecordType,
-					CRDRegistryIdentifierLabel: r.SetIdentifier,
+					crds.RegistryOwnerLabel:      im.OwnerID(),
+					crds.RegistryRecordNameLabel: r.DNSName,
+					crds.RegistryRecordTypeLabel: r.RecordType,
+					crds.RegistryIdentifierLabel: r.SetIdentifier,
 				},
 			},
-			Spec: DNSEntrySpec{
-				Endpoints: []*endpoint.Endpoint{r},
+			Spec: crds.DNSEntrySpec{
+				Endpoint: *r,
 			},
 		}
-		result := im.client.Post().Namespace(im.namespace).Body(&entry).Do(ctx)
+		result := im.client.Post().Body(&entry).Do(ctx)
 		if err := result.Error(); err != nil {
 			// It could be possible that a record already exists if a previous apply change happened
 			// and there was an error while creating those records through the provider. For that reason,
@@ -224,19 +264,19 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 	}
 
 	for _, r := range filteredChanges.Delete {
-		var entries DNSEntryList
+		var entries crds.DNSEntryList
 		opts := metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=%s,%s=%s", CRDRegistryIdentifierLabel, r.SetIdentifier, CRDRegistryOwnerLabel, im.ownerID),
+			LabelSelector: fmt.Sprintf("%s=%s,%s=%s", crds.RegistryIdentifierLabel, r.SetIdentifier, crds.RegistryOwnerLabel, im.ownerID),
 		}
 
-		err := im.client.Get().Namespace(im.namespace).Resource(im.client.resource.Name).VersionedParams(&opts, im.client.codec).Do(ctx).Into(&entries)
+		err := im.client.Get().Namespace(im.namespace).Params(&opts).Do(ctx).Into(&entries)
 		if err != nil {
 			return err
 		}
 
 		// While this is a list, it is expected that this call will return 0 or 1 entries.
 		for _, e := range entries.Items {
-			result := im.client.Delete().Namespace(im.namespace).Resource(im.client.resource.Name).Name(e.Name).Do(ctx)
+			result := im.client.Delete().Namespace(im.namespace).Name(e.Name).Do(ctx)
 			if err := result.Error(); err != nil {
 				// Ignore not found as it's a benign error, the entry record isn't present and it's the end goal here, to remove
 				// all entries. All other errors should surface back to the user.
@@ -250,19 +290,19 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 		for i, e := range filteredChanges.UpdateNew {
 			old := filteredChanges.UpdateOld[i]
 
-			var entries DNSEntryList
+			var entries crds.DNSEntryList
 			opts := metav1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s=%s,%s=%s", CRDRegistryIdentifierLabel, old.SetIdentifier, CRDRegistryOwnerLabel, im.ownerID),
+				LabelSelector: fmt.Sprintf("%s=%s,%s=%s", crds.RegistryIdentifierLabel, old.SetIdentifier, crds.RegistryOwnerLabel, im.ownerID),
 			}
 
-			err := im.client.Get().Namespace(im.namespace).Resource(im.client.resource.Name).VersionedParams(&opts, im.client.codec).Do(ctx).Into(&entries)
+			err := im.client.Get().Namespace(im.namespace).Params(&opts).Do(ctx).Into(&entries)
 			if err != nil {
 				return err
 			}
 
 			for _, entry := range entries.Items {
-				entry.Spec.Endpoints = []*endpoint.Endpoint{e}
-				result := im.client.Put().Namespace(im.namespace).Resource(im.client.resource.Name).Name(entry.Name).Body(&entry).Do(ctx)
+				entry.Spec.Endpoint = *e
+				result := im.client.Put().Namespace(im.namespace).Name(entry.Name).Body(&entry).Do(ctx)
 				if err := result.Error(); err != nil {
 					return err
 				}
@@ -302,44 +342,102 @@ func (im *CRDRegistry) removeFromCache(ep *endpoint.Endpoint) {
 	}
 }
 
-// DNSEntrySpec defines the desired state of DNSEndpoint
-// +kubebuilder:object:generate=true
-type DNSEntrySpec struct {
-	Endpoints []*endpoint.Endpoint `json:"endpoints,omitempty"`
+type crdclient struct {
+	scheme   *runtime.Scheme
+	resource *metav1.APIResource
+	codec    runtime.ParameterCodec
+	rest.Interface
 }
 
-// DNSEntryStatus defines the observed state of DNSENtry
-// +kubebuilder:object:generate=true
-type DNSEntryStatus struct {
-	// The generation observed by the external-dns controller.
-	// +optional
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+func (c crdclient) Get() CRDRequest {
+	return &crdrequest{client: &c, method: "GET", resource: c.resource}
 }
 
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// DNSEntry is a contract that a user-specified CRD must implement to be used as a source for external-dns.
-// The user-specified CRD should also have the status sub-resource.
-// +k8s:openapi-gen=true
-// +groupName=externaldns.k8s.io
-// +kubebuilder:resource:path=dnsentries
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +versionName=v1alpha1
-
-type DNSEntry struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   DNSEntrySpec   `json:"spec,omitempty"`
-	Status DNSEntryStatus `json:"status,omitempty"`
+func (c crdclient) List() CRDRequest {
+	return &crdrequest{client: &c, method: "LIST", resource: c.resource}
 }
 
-// +kubebuilder:object:root=true
-// DNSEndpointList is a list of DNSEndpoint objects
-type DNSEntryList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []DNSEntry `json:"items"`
+func (c crdclient) Post() CRDRequest {
+	return &crdrequest{client: &c, method: "POST", resource: c.resource}
+}
+
+func (c crdclient) Put() CRDRequest {
+	return &crdrequest{client: &c, method: "PUT", resource: c.resource}
+}
+
+func (c crdclient) Delete() CRDRequest {
+	return &crdrequest{client: &c, method: "DELETE", resource: c.resource}
+}
+
+type crdrequest struct {
+	client   *crdclient
+	resource *metav1.APIResource
+
+	method    string
+	namespace string
+	name      string
+	params    runtime.Object
+	body      interface{}
+}
+
+func (r *crdrequest) Name(name string) CRDRequest {
+	r.name = name
+	return r
+}
+
+func (r *crdrequest) Namespace(namespace string) CRDRequest {
+	r.namespace = namespace
+	return r
+}
+
+func (r *crdrequest) Params(obj runtime.Object) CRDRequest {
+	r.params = obj
+	return r
+}
+
+func (r *crdrequest) Body(obj interface{}) CRDRequest {
+	r.body = obj
+	return r
+}
+
+func (r *crdrequest) Do(ctx context.Context) CRDResult {
+	var real *rest.Request
+	switch r.method {
+	case "POST":
+		real = r.client.Interface.Post()
+	case "PUT":
+		real = r.client.Interface.Put()
+	case "DELETE":
+		real = r.client.Interface.Delete()
+	default:
+		real = r.client.Interface.Get()
+	}
+
+	real = real.Namespace(r.namespace).Resource(r.resource.Name)
+	if r.name != "" {
+		real = real.Name(r.name)
+	}
+
+	if r.params != nil {
+		real = real.VersionedParams(r.params, r.client.codec)
+	}
+
+	if r.body != nil {
+		real = real.Body(r.body)
+	}
+
+	result := real.Do(ctx)
+	return &crdresult{result}
+}
+
+type crdresult struct {
+	rest.Result
+}
+
+func (r crdresult) Error() error {
+	return r.Result.Error()
+}
+
+func (r crdresult) Into(obj runtime.Object) error {
+	return r.Result.Into(obj)
 }
