@@ -2,12 +2,16 @@ package registry
 
 import (
 	"context"
+	"errors"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/external-dns/crds"
 	"sigs.k8s.io/external-dns/endpoint"
 	"sigs.k8s.io/external-dns/plan"
 	"sigs.k8s.io/external-dns/provider/inmemory"
@@ -108,7 +112,7 @@ func testRecords(t *testing.T) {
 		registry := &CRDRegistry{
 			provider:  provider,
 			namespace: "default",
-			client:    NewMockCRDClient(),
+			client:    NewMockCRDClient("default"),
 			ownerID:   "test",
 		}
 
@@ -124,13 +128,40 @@ func testRecords(t *testing.T) {
 	})
 
 	t.Run("Add existing labels from registry to the record from the provider", func(t *testing.T) {
-		provider := inMemoryProviderWithEntries(t, ctx, "mytestdomain.io")
-		responses := map[mockRequest]mockResponse{}
-		responses[mockRequest{
-			method:    "GET",
-			namespace: "default",
-		}] = mockResponse{}
-		client := NewMockCRDClient(responses)
+		// Setup the provider and the mock client for the CRD so that mytestdomain.io can be
+		// found on both the provider and the CRD
+		provider := inMemoryProviderWithEntries(t, ctx, "mytestdomain.io", &endpoint.Endpoint{
+			DNSName:       "sub.mytestdomain.io",
+			RecordType:    "CNAME",
+			SetIdentifier: "myid-1",
+		})
+
+		responses := []mockResult{{
+			request: mockRequest{
+				method:    "GET",
+				namespace: "default",
+			},
+			response: &mockResponse{
+				content: crds.DNSEntryList{
+					Items: []crds.DNSEntry{{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								crds.RegistryResourceLabel: "some-value",
+							},
+						},
+						Spec: crds.DNSEntrySpec{
+							Endpoint: endpoint.Endpoint{
+								DNSName:       "sub.mytestdomain.io",
+								RecordType:    "CNAME",
+								SetIdentifier: "myid-1",
+							},
+						},
+					}},
+				},
+			},
+		}}
+
+		client := NewMockCRDClient("default", responses...)
 
 		registry := &CRDRegistry{
 			provider:  provider,
@@ -139,16 +170,19 @@ func testRecords(t *testing.T) {
 			ownerID:   "test",
 		}
 
+		// The test
 		endpoints, err := registry.Records(ctx)
 		if err != nil {
 			t.Error(err)
 		}
-		t.Logf("Endpoints: %#v", endpoints[0])
 
-		if endpoints[0].RecordType != "CNAME" {
-			t.Error("Expected record type to be changed from ALIAS to CNAME: ", endpoints[0].RecordType)
+		if len(endpoints) != 1 {
+			t.Errorf("expected only 1 endpoint, got %d", len(endpoints))
 		}
 
+		if endpoints[0].Labels[endpoint.ResourceLabelKey] != "some-value" {
+			t.Errorf("endpoint doesn't include the label from the registry: %#v", endpoints[0].Labels)
+		}
 	})
 }
 
@@ -157,17 +191,25 @@ func testApplyChanges(t *testing.T) {
 }
 
 // Mocks
-type mockClient struct {
-	mockResponses map[mockRequest]mockResponse
+type mockResult struct {
+	request  mockRequest
+	response CRDResult
 }
 
-func NewMockCRDClient(responses map[mockRequest]mockResponse) CRDClient {
-	if responses == nil {
-		responses = map[mockRequest]mockResponse{}
+type mockClient struct {
+	namespace     string
+	mockResponses map[mockRequestKey]CRDResult
+}
+
+func NewMockCRDClient(namespace string, responses ...mockResult) CRDClient {
+	mockResponses := map[mockRequestKey]CRDResult{}
+	for _, r := range responses {
+		mockResponses[keyFromRequest(&r.request)] = r.response
 	}
 
 	return &mockClient{
-		mockResponses: responses,
+		namespace:     namespace,
+		mockResponses: mockResponses,
 	}
 }
 
@@ -175,26 +217,41 @@ func (m *mockClient) MockResponses() {
 }
 
 func (m *mockClient) Get() CRDRequest {
-	return &mockRequest{}
+	return &mockRequest{c: m, namespace: m.namespace, method: "GET"}
 }
 
 func (m *mockClient) List() CRDRequest {
-	return &mockRequest{}
+	return &mockRequest{c: m, namespace: m.namespace, method: "GET"}
 }
 
 func (m *mockClient) Put() CRDRequest {
-	return &mockRequest{}
+	return &mockRequest{c: m, namespace: m.namespace, method: "PUT"}
 }
 
 func (m *mockClient) Post() CRDRequest {
-	return &mockRequest{}
+	return &mockRequest{c: m, namespace: m.namespace, method: "POST"}
 }
 
 func (m *mockClient) Delete() CRDRequest {
-	return &mockRequest{}
+	return &mockRequest{c: m, namespace: m.namespace, method: "DELETE"}
+}
+
+type mockRequestKey struct {
+	method    string
+	namespace string
+	name      string
+}
+
+func keyFromRequest(mr *mockRequest) mockRequestKey {
+	return mockRequestKey{
+		method:    mr.method,
+		name:      mr.name,
+		namespace: mr.namespace,
+	}
 }
 
 type mockRequest struct {
+	c         *mockClient
 	method    string
 	namespace string
 	name      string
@@ -216,17 +273,32 @@ func (mr *mockRequest) Params(runtime.Object) CRDRequest {
 }
 
 func (mr *mockRequest) Do(ctx context.Context) CRDResult {
-	return &mockResponse{}
+	if response, found := mr.c.mockResponses[keyFromRequest(mr)]; found {
+		return response
+	}
+
+	return &mockErrorResponse{}
+}
+
+type mockErrorResponse struct{}
+
+func (mr *mockErrorResponse) Error() error {
+	return errors.New("Request wasn't mocked")
+}
+
+func (mr *mockErrorResponse) Into(obj runtime.Object) error {
+	return errors.New("Request wasn't mocked")
 }
 
 type mockResponse struct {
-	content interface{}
+	content any
 }
 
 func (mr *mockResponse) Error() error {
 	return nil
 }
 
-func (mr *mockResponse) Into(runtime.Object) error {
+func (mr *mockResponse) Into(obj runtime.Object) error {
+	reflect.ValueOf(obj).Elem().Set(reflect.ValueOf(mr.content))
 	return nil
 }
