@@ -72,7 +72,7 @@ crd: controller-gen
 # generates CRD Objects using controller-gen
 .PHONY: generate
 generate: controller-gen
-	${CONTROLLER_GEN} object crd:crdVersions=v1 paths="./crds/..." paths="./endpoint/..."
+	${CONTROLLER_GEN} object crd:crdVersions=v1 paths="./crds/..." paths="./endpoint/..." output:crd:stdout > docs/contributing/crd-source/crd-manifest.yaml
 
 # The verify target runs tasks similar to the CI tasks, but without code coverage
 .PHONY: test

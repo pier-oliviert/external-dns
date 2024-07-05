@@ -86,6 +86,7 @@ type CRDRegistry struct {
 
 // NewCRDClientForAPIVersionKind return rest client for the given apiVersion and kind of the CRD
 func NewCRDClientForAPIVersionKind(client kubernetes.Interface, kubeConfig, apiServerURL, apiVersion string) (CRDClient, error) {
+	log.Debug("CRDClientForAPI")
 	if kubeConfig == "" {
 		if _, err := os.Stat(clientcmd.RecommendedHomeFile); err == nil {
 			kubeConfig = clientcmd.RecommendedHomeFile
@@ -143,7 +144,8 @@ func NewCRDRegistry(provider provider.Provider, crdClient CRDClient, ownerID str
 	}
 
 	if namespace == "" {
-		return nil, errors.New("namespace cannot be empty, if you want to use `default` you need to specify it")
+		log.Info("Registry: No namespace specified, using `default`.")
+		namespace = "default"
 	}
 
 	return &CRDRegistry{
@@ -233,7 +235,7 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 	}
 
 	for _, r := range filteredChanges.Create {
-		entry := &crds.DNSEntry{
+		entry := crds.DNSEntry{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      fmt.Sprintf("%s-%s", r.DNSName, im.OwnerID()),
 				Namespace: im.namespace,
@@ -248,7 +250,8 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 				Endpoint: *r,
 			},
 		}
-		result := im.client.Post().Body(&entry).Do(ctx)
+
+		result := im.client.Post().Namespace(im.namespace).Body(&entry).Do(ctx)
 		if err := result.Error(); err != nil {
 			// It could be possible that a record already exists if a previous apply change happened
 			// and there was an error while creating those records through the provider. For that reason,
