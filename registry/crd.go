@@ -86,7 +86,6 @@ type CRDRegistry struct {
 
 // NewCRDClientForAPIVersionKind return rest client for the given apiVersion and kind of the CRD
 func NewCRDClientForAPIVersionKind(client kubernetes.Interface, kubeConfig, apiServerURL, apiVersion string) (CRDClient, error) {
-	log.Debug("CRDClientForAPI")
 	if kubeConfig == "" {
 		if _, err := os.Stat(clientcmd.RecommendedHomeFile); err == nil {
 			kubeConfig = clientcmd.RecommendedHomeFile
@@ -144,7 +143,7 @@ func NewCRDRegistry(provider provider.Provider, crdClient CRDClient, ownerID str
 	}
 
 	if namespace == "" {
-		log.Info("Registry: No namespace specified, using `default`.")
+		log.Info("Registry: No namespace specified, using `default`")
 		namespace = "default"
 	}
 
