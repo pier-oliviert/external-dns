@@ -236,7 +236,7 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 	for _, r := range filteredChanges.Create {
 		entry := crds.DNSEntry{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      fmt.Sprintf("%s-%s", r.DNSName, im.OwnerID()),
+				Name:      fmt.Sprintf("%s-%s", im.OwnerID(), r.SetIdentifier),
 				Namespace: im.namespace,
 				Labels: map[string]string{
 					crds.RegistryOwnerLabel:      im.OwnerID(),
@@ -288,31 +288,39 @@ func (im *CRDRegistry) ApplyChanges(ctx context.Context, changes *plan.Changes) 
 			}
 		}
 
-		// Update existing DNS entries to reflect the newest change.
-		for i, e := range filteredChanges.UpdateNew {
-			old := filteredChanges.UpdateOld[i]
+		if im.cacheInterval > 0 {
+			im.removeFromCache(r)
+		}
+	}
 
-			var entries crds.DNSEntryList
-			opts := metav1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s=%s,%s=%s", crds.RegistryIdentifierLabel, old.SetIdentifier, crds.RegistryOwnerLabel, im.ownerID),
-			}
+	// Update existing DNS entries to reflect the newest change.
+	for i, e := range filteredChanges.UpdateNew {
+		old := filteredChanges.UpdateOld[i]
 
-			err := im.client.Get().Namespace(im.namespace).Params(&opts).Do(ctx).Into(&entries)
-			if err != nil {
+		var entries crds.DNSEntryList
+		opts := metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s,%s=%s", crds.RegistryIdentifierLabel, old.SetIdentifier, crds.RegistryOwnerLabel, im.ownerID),
+		}
+
+		err := im.client.Get().Namespace(im.namespace).Params(&opts).Do(ctx).Into(&entries)
+		if err != nil {
+			return err
+		}
+
+		for _, entry := range entries.Items {
+			entry.Spec.Endpoint = *e
+			result := im.client.Put().Namespace(im.namespace).Name(entry.Name).Body(&entry).Do(ctx)
+			if err := result.Error(); err != nil {
 				return err
-			}
-
-			for _, entry := range entries.Items {
-				entry.Spec.Endpoint = *e
-				result := im.client.Put().Namespace(im.namespace).Name(entry.Name).Body(&entry).Do(ctx)
-				if err := result.Error(); err != nil {
-					return err
-				}
 			}
 		}
 
 		if im.cacheInterval > 0 {
-			im.removeFromCache(r)
+			im.addToCache(e)
+		}
+
+		if im.cacheInterval > 0 {
+			im.removeFromCache(old)
 		}
 	}
 
