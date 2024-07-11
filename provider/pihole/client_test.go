@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 func newTestServer(t *testing.T, hdlr http.HandlerFunc) *httptest.Server {

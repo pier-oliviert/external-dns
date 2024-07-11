@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 const (

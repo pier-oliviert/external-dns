@@ -73,7 +73,7 @@ One can use CRD source by specifying `--source` flag with `crd` and specifying t
 for e.g:
 
 ```
-$ build/external-dns --source crd --crd-source-apiversion externaldns.k8s.io/v1alpha1  --crd-source-kind DNSEndpoint --provider inmemory --once --dry-run
+$ build/external-dns --source crd --crd-source-apiversion se.quencer.io/v1alpha1  --crd-source-kind DNSEndpoint --provider inmemory --once --dry-run
 ```
 
 ### Creating DNS Records
@@ -87,20 +87,20 @@ Apply this to register the CRD
 
 ```
 $ kubectl apply --validate=false -f docs/contributing/crd-source/crd-manifest.yaml
-customresourcedefinition.apiextensions.k8s.io "dnsendpoints.externaldns.k8s.io" created
+customresourcedefinition.apiextensions.k8s.io "dnsendpoints.se.quencer.io" created
 ```
 
 Then you can create the dns-endpoint yaml similar to [dnsendpoint-example](crd-source/dnsendpoint-example.yaml)
 
 ```
 $ kubectl apply -f docs/contributing/crd-source/dnsendpoint-example.yaml
-dnsendpoint.externaldns.k8s.io "examplednsrecord" created
+dnsendpoint.se.quencer.io "examplednsrecord" created
 ```
 
 Run external-dns in dry-mode to see whether external-dns picks up the DNS record from CRD.
 
 ```
-$ build/external-dns --source crd --crd-source-apiversion externaldns.k8s.io/v1alpha1  --crd-source-kind DNSEndpoint --provider inmemory --once --dry-run
+$ build/external-dns --source crd --crd-source-apiversion se.quencer.io/v1alpha1  --crd-source-kind DNSEndpoint --provider inmemory --once --dry-run
 INFO[0000] running in dry-run mode. No changes to DNS records will be made.
 INFO[0000] Connected to cluster at https://192.168.99.100:8443
 INFO[0000] CREATE: foo.bar.com 180 IN A 192.168.99.216
@@ -111,10 +111,10 @@ INFO[0000] CREATE: foo.bar.com 0 IN TXT "heritage=external-dns,external-dns/owne
 
 If you use RBAC, extend the `external-dns` ClusterRole with:
 ```
-- apiGroups: ["externaldns.k8s.io"]
+- apiGroups: ["se.quencer.io"]
   resources: ["dnsendpoints"]
   verbs: ["get","watch","list"]
-- apiGroups: ["externaldns.k8s.io"]
+- apiGroups: ["se.quencer.io"]
   resources: ["dnsendpoints/status"]
   verbs: ["*"]
 ```

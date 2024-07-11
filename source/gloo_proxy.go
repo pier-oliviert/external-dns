@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 var (

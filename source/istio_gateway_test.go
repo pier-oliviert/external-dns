@@ -32,7 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 // This is a compile-time validation that gatewaySource is a Source.

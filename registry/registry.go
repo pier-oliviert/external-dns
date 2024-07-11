@@ -19,8 +19,8 @@ package registry
 import (
 	"context"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 )
 
 // Registry is an interface which should enables ownership concept in external-dns

@@ -27,9 +27,9 @@ import (
 	privatedns "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	log "github.com/sirupsen/logrus"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
 )
 
 // PrivateZonesClient is an interface of privatedns.PrivateZoneClient that can be stubbed for testing.

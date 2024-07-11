@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -115,7 +115,7 @@ var (
 		ExoscaleAPIZone:             "ch-gva-2",
 		ExoscaleAPIKey:              "",
 		ExoscaleAPISecret:           "",
-		CRDSourceAPIVersion:         "externaldns.k8s.io/v1alpha1",
+		CRDSourceAPIVersion:         "se.quencer.io/v1alpha1",
 		CRDSourceKind:               "DNSEndpoint",
 		RcodezeroTXTEncrypt:         false,
 		TransIPAccountName:          "",
@@ -536,9 +536,9 @@ func restoreEnv(t *testing.T, originalEnv map[string]string) {
 
 func TestPasswordsNotLogged(t *testing.T) {
 	cfg := Config{
-		DynPassword:          "dyn-pass",
-		PDNSAPIKey:           "pdns-api-key",
-		RFC2136TSIGSecret:    "tsig-secret",
+		DynPassword:       "dyn-pass",
+		PDNSAPIKey:        "pdns-api-key",
+		RFC2136TSIGSecret: "tsig-secret",
 	}
 
 	s := cfg.String()

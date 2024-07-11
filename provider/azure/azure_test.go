@@ -25,10 +25,10 @@ import (
 	dns "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/stretchr/testify/assert"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/internal/testutils"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/internal/testutils"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
 )
 
 // mockZonesClient implements the methods of the Azure DNS Zones Client which are used in the Azure Provider

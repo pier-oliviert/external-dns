@@ -23,8 +23,8 @@ import (
 	egoscale "github.com/exoscale/egoscale/v2"
 	"github.com/stretchr/testify/assert"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 
 	"github.com/google/uuid"
 )

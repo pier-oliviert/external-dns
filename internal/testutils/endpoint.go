@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"sort"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 /** test utility functions for endpoints verifications */

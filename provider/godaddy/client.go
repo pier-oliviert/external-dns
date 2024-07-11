@@ -30,7 +30,7 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"sigs.k8s.io/external-dns/pkg/apis/externaldns"
+	"github.com/pier-oliviert/external-dns/pkg/apis/externaldns"
 )
 
 // DefaultTimeout api requests after 180s

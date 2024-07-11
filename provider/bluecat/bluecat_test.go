@@ -19,12 +19,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/internal/testutils"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
+	api "github.com/pier-oliviert/external-dns/provider/bluecat/gateway"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/internal/testutils"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
-	api "sigs.k8s.io/external-dns/provider/bluecat/gateway"
 )
 
 type mockGatewayClient struct {

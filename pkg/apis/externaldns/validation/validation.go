@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
-	"sigs.k8s.io/external-dns/pkg/apis/externaldns"
+	"github.com/pier-oliviert/external-dns/pkg/apis/externaldns"
 )
 
 // ValidateConfig performs validation on the Config object

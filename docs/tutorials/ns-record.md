@@ -6,7 +6,7 @@ and `DNSEndpoint` CRD.
 Consider the following example
 
 ```yaml
-apiVersion: externaldns.k8s.io/v1alpha1
+apiVersion: se.quencer.io/v1alpha1
 kind: DNSEndpoint
 metadata:
   name: ns-record

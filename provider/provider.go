@@ -22,8 +22,8 @@ import (
 	"net"
 	"strings"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 )
 
 // SoftError is an error, that provider will only log as error instead

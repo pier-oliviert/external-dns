@@ -22,13 +22,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"testing"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakeDynamic "k8s.io/client-go/dynamic/fake"
 	fakeKube "k8s.io/client-go/kubernetes/fake"
-	"sigs.k8s.io/external-dns/endpoint"
 )
 
 // This is a compile-time validation that traefikSource is a Source.

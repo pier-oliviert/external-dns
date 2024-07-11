@@ -1,11 +1,11 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: dnsendpoints.externaldns.k8s.io
+  name: dnsendpoints.se.quencer.io
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/external-dns/pull/2007
 spec:
-  group: externaldns.k8s.io
+  group: se.quencer.io
   names:
     kind: DNSEndpoint
     listKind: DNSEndpointList

@@ -25,10 +25,10 @@ import (
 
 	"github.com/civo/civogo"
 	"github.com/google/go-cmp/cmp"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
 )
 
 func TestNewCivoProvider(t *testing.T) {

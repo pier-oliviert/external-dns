@@ -28,8 +28,8 @@ import (
 	"github.com/transip/gotransip/v6/domain"
 	"github.com/transip/gotransip/v6/rest"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/provider"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/provider"
 )
 
 func newProvider() *TransIPProvider {

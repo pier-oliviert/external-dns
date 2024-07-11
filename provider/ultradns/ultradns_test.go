@@ -27,10 +27,10 @@ import (
 	_ "strings"
 	"testing"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 	"github.com/stretchr/testify/assert"
 	udnssdk "github.com/ultradns/ultradns-sdk-go"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
 )
 
 type mockUltraDNSZone struct {

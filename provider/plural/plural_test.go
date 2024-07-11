@@ -20,13 +20,13 @@ import (
 	"context"
 	"testing"
 
-	"sigs.k8s.io/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/plan"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/internal/testutils"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/internal/testutils"
 
+	"github.com/pier-oliviert/external-dns/provider"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/external-dns/provider"
 )
 
 type ClientStub struct {

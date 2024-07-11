@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 // HTTPProxySource is an implementation of Source for ProjectContour HTTPProxy objects.

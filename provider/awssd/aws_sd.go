@@ -29,9 +29,9 @@ import (
 	sd "github.com/aws/aws-sdk-go/service/servicediscovery"
 	log "github.com/sirupsen/logrus"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
 )
 
 const (

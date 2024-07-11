@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
 )
 
 var records []*endpoint.Endpoint

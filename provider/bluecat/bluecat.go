@@ -32,10 +32,10 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
-	api "sigs.k8s.io/external-dns/provider/bluecat/gateway"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
+	api "github.com/pier-oliviert/external-dns/provider/bluecat/gateway"
 )
 
 // BluecatProvider implements the DNS provider for Bluecat DNS

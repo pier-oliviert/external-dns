@@ -37,7 +37,7 @@ import (
 
 	f5 "github.com/F5Networks/k8s-bigip-ctlr/v2/config/apis/cis/v1"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 var f5VirtualServerGVR = schema.GroupVersionResource{

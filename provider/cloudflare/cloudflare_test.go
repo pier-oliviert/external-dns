@@ -29,9 +29,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/maxatome/go-testdeep/td"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
 )
 
 type MockAction struct {

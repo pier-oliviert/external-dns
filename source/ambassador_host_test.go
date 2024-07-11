@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	ambassador "github.com/datawire/ambassador/pkg/api/getambassador.io/v2"
+	"github.com/pier-oliviert/external-dns/endpoint"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -31,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	fakeDynamic "k8s.io/client-go/dynamic/fake"
 	fakeKube "k8s.io/client-go/kubernetes/fake"
-	"sigs.k8s.io/external-dns/endpoint"
 )
 
 const defaultAmbassadorNamespace = "ambassador"

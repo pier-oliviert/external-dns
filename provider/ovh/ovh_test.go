@@ -27,11 +27,11 @@ import (
 	"github.com/miekg/dns"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/patrickmn/go-cache"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/ratelimit"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
 )
 
 type mockOvhClient struct {

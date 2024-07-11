@@ -25,8 +25,8 @@ import (
 	rc0 "github.com/nic-at/rc0go"
 	"github.com/stretchr/testify/require"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
 )
 
 const (

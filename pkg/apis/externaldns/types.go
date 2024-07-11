@@ -26,12 +26,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/sirupsen/logrus"
 
-	"sigs.k8s.io/external-dns/source"
+	"github.com/pier-oliviert/external-dns/source"
 )
 
 const (
@@ -315,7 +315,7 @@ var defaultConfig = &Config{
 	ExoscaleAPIZone:             "ch-gva-2",
 	ExoscaleAPIKey:              "",
 	ExoscaleAPISecret:           "",
-	CRDSourceAPIVersion:         "externaldns.k8s.io/v1alpha1",
+	CRDSourceAPIVersion:         "se.quencer.io/v1alpha1",
 	CRDSourceKind:               "DNSEndpoint",
 	ServiceTypeFilter:           []string{},
 	CFAPIEndpoint:               "",
@@ -442,7 +442,7 @@ func (cfg *Config) ParseFlags(args []string) error {
 	app.Flag("publish-host-ip", "Allow external-dns to publish host-ip for headless services (optional)").BoolVar(&cfg.PublishHostIP)
 	app.Flag("always-publish-not-ready-addresses", "Always publish also not ready addresses for headless services (optional)").BoolVar(&cfg.AlwaysPublishNotReadyAddresses)
 	app.Flag("connector-source-server", "The server to connect for connector source, valid only when using connector source").Default(defaultConfig.ConnectorSourceServer).StringVar(&cfg.ConnectorSourceServer)
-	app.Flag("crd-source-apiversion", "API version of the CRD for crd source, e.g. `externaldns.k8s.io/v1alpha1`, valid only when using crd source").Default(defaultConfig.CRDSourceAPIVersion).StringVar(&cfg.CRDSourceAPIVersion)
+	app.Flag("crd-source-apiversion", "API version of the CRD for crd source, e.g. `se.quencer.io/v1alpha1`, valid only when using crd source").Default(defaultConfig.CRDSourceAPIVersion).StringVar(&cfg.CRDSourceAPIVersion)
 	app.Flag("crd-source-kind", "Kind of the CRD for the crd source in API group and version specified by crd-source-apiversion").Default(defaultConfig.CRDSourceKind).StringVar(&cfg.CRDSourceKind)
 	app.Flag("service-type-filter", "The service types to take care about (default: all, expected: ClusterIP, NodePort, LoadBalancer or ExternalName)").StringsVar(&cfg.ServiceTypeFilter)
 	app.Flag("managed-record-types", "Record types to manage; specify multiple times to include many; (default: A, AAAA, CNAME) (supported records: A, AAAA, CNAME, NS, SRV, TXT)").Default("A", "AAAA", "CNAME").StringsVar(&cfg.ManagedDNSRecordTypes)

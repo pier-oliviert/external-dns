@@ -6,7 +6,7 @@
 | connector                       |                                                                               |                   |              |
 | contour-httpproxy               | HttpProxy.projectcontour.io                                                   | Yes               |              |
 | cloudfoundry                    |                                                                               |                   |              |
-| crd                             | DNSEndpoint.externaldns.k8s.io                                                | Yes               | Yes          |
+| crd                             | DNSEndpoint.se.quencer.io                                                | Yes               | Yes          |
 | f5-virtualserver                | VirtualServer.cis.f5.com                                                      | Yes               |              |
 | [gateway-grpcroute](gateway.md) | GRPCRoute.gateway.networking.k8s.io                                           | Yes               | Yes          |
 | [gateway-httproute](gateway.md) | HTTPRoute.gateway.networking.k8s.io                                           | Yes               | Yes          |

@@ -32,7 +32,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 // piholeAPI declares the "API" actions performed against the Pihole server.

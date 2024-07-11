@@ -26,7 +26,7 @@ import (
 	"math/rand"
 	"net"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 // fakeSource is an implementation of Source that provides dummy endpoints for

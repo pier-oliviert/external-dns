@@ -22,7 +22,7 @@ import (
 
 	cfclient "github.com/cloudfoundry-community/go-cfclient"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 type cloudfoundrySource struct {

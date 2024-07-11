@@ -3,16 +3,16 @@ package crds
 import (
 	"strings"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/external-dns/endpoint"
 )
 
 const (
-	RegistryOwnerLabel      string = "externaldns.k8s.io/owner"
-	RegistryRecordNameLabel string = "externaldns.k8s.io/record-name"
-	RegistryRecordTypeLabel string = "externaldns.k8s.io/record-type"
-	RegistryIdentifierLabel string = "externaldns.k8s.io/identifier"
-	RegistryResourceLabel   string = "externaldns.k8s.io/resource"
+	RegistryOwnerLabel      string = "se.quencer.io/owner"
+	RegistryRecordNameLabel string = "se.quencer.io/record-name"
+	RegistryRecordTypeLabel string = "se.quencer.io/record-type"
+	RegistryIdentifierLabel string = "se.quencer.io/identifier"
+	RegistryResourceLabel   string = "se.quencer.io/resource"
 )
 
 // DNSEntrySpec defines the desired state of DNSEndpoint
@@ -35,7 +35,7 @@ type DNSEntryStatus struct {
 // DNSEntry is a contract that a user-specified CRD must implement to be used as a source for external-dns.
 // The user-specified CRD should also have the status sub-resource.
 // +k8s:openapi-gen=true
-// +groupName=externaldns.k8s.io
+// +groupName=se.quencer.io
 // +kubebuilder:resource:path=dnsentries
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

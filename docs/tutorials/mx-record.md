@@ -13,7 +13,7 @@ Targets within the CRD need to be specified according to the RFC 1034 (section 3
 `example.com` DNS MX record which specifies two separate targets with distinct priorities.
 
 ```yaml
-apiVersion: externaldns.k8s.io/v1alpha1
+apiVersion: se.quencer.io/v1alpha1
 kind: DNSEndpoint
 metadata:
   name: examplemxrecord

@@ -27,7 +27,7 @@ import (
 	"github.com/linki/instrumented_http"
 	"github.com/sirupsen/logrus"
 
-	"sigs.k8s.io/external-dns/pkg/apis/externaldns"
+	"github.com/pier-oliviert/external-dns/pkg/apis/externaldns"
 )
 
 // AWSSessionConfig contains configuration to create a new AWS provider.

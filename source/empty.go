@@ -19,7 +19,7 @@ package source
 import (
 	"context"
 
-	"sigs.k8s.io/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/endpoint"
 )
 
 // emptySource is a Source that returns no endpoints.

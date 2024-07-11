@@ -24,11 +24,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
+	webhookapi "github.com/pier-oliviert/external-dns/provider/webhook/api"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
-	webhookapi "sigs.k8s.io/external-dns/provider/webhook/api"
 )
 
 func TestInvalidDomainFilter(t *testing.T) {

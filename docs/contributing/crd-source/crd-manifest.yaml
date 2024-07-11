@@ -5,9 +5,9 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/external-dns/pull/2007
     controller-gen.kubebuilder.io/version: v0.15.0
-  name: dnsendpoints.externaldns.k8s.io
+  name: dnsendpoints.se.quencer.io
 spec:
-  group: externaldns.k8s.io
+  group: se.quencer.io
   names:
     kind: DNSEndpoint
     listKind: DNSEndpointList
@@ -105,9 +105,9 @@ metadata:
   annotations:
     api-approved.kubernetes.io: "https://github.com/kubernetes-sigs/external-dns/pull/2007"
     controller-gen.kubebuilder.io/version: v0.15.0
-  name: dnsentries.externaldns.k8s.io
+  name: dnsentries.se.quencer.io
 spec:
-  group: externaldns.k8s.io
+  group: se.quencer.io
   names:
     kind: DNSEntry
     listKind: DNSEntryList

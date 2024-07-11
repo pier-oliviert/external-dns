@@ -20,9 +20,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/external-dns/endpoint"
 )
 
 func createTestRouteGroup(ns, name string, annotations map[string]string, hosts []string, destinations []routeGroupLoadBalancer) *routeGroup {

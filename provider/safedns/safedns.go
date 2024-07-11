@@ -26,9 +26,9 @@ import (
 	"github.com/ans-group/sdk-go/pkg/service/safedns"
 	log "github.com/sirupsen/logrus"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
 )
 
 // SafeDNS is an interface that is a subset of the SafeDNS service API that are actually used.

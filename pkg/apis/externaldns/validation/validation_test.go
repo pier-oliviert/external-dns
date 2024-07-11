@@ -19,7 +19,7 @@ package validation
 import (
 	"testing"
 
-	"sigs.k8s.io/external-dns/pkg/apis/externaldns"
+	"github.com/pier-oliviert/external-dns/pkg/apis/externaldns"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

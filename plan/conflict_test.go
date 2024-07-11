@@ -20,8 +20,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pier-oliviert/external-dns/endpoint"
 	"github.com/stretchr/testify/suite"
-	"sigs.k8s.io/external-dns/endpoint"
 )
 
 var _ ConflictResolver = PerResource{}

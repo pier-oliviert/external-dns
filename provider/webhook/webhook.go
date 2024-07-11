@@ -24,10 +24,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
-	webhookapi "sigs.k8s.io/external-dns/provider/webhook/api"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
+	webhookapi "github.com/pier-oliviert/external-dns/provider/webhook/api"
 
 	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/prometheus/client_golang/prometheus"

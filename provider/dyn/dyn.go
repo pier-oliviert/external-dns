@@ -28,10 +28,10 @@ import (
 
 	"github.com/nesv/go-dynect/dynect"
 
-	"sigs.k8s.io/external-dns/endpoint"
-	"sigs.k8s.io/external-dns/plan"
-	"sigs.k8s.io/external-dns/provider"
-	dynsoap "sigs.k8s.io/external-dns/provider/dyn/soap"
+	"github.com/pier-oliviert/external-dns/endpoint"
+	"github.com/pier-oliviert/external-dns/plan"
+	"github.com/pier-oliviert/external-dns/provider"
+	dynsoap "github.com/pier-oliviert/external-dns/provider/dyn/soap"
 )
 
 const (
